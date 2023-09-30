@@ -1,6 +1,4 @@
-﻿using Microsoft.AspNetCore.SignalR;
-
-namespace MyTask.Controllers;
+﻿namespace MyTask.Controllers;
 
 [Route("api/Admin/User")]
 [ApiController]

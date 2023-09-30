@@ -1,6 +1,4 @@
-﻿using Microsoft.Extensions.Hosting;
-
-namespace MyTask.Controllers;
+﻿namespace MyTask.Controllers;
 
 [Route("api/[controller]")]
 [ApiController]
