@@ -12,7 +12,7 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace MyTask.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20230928152454_Frist")]
+    [Migration("20230930003804_Frist")]
     partial class Frist
     {
         /// <inheritdoc />
@@ -28,17 +28,18 @@ namespace MyTask.Migrations
             modelBuilder.Entity("MyTask.Assignment", b =>
                 {
                     b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
 
                     b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("timestamp without time zone");
 
                     b.Property<string>("Description")
                         .IsRequired()
                         .HasColumnType("text");
 
                     b.Property<DateTime>("DueTo")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("timestamp without time zone");
 
                     b.Property<string>("Name")
                         .IsRequired()
@@ -48,6 +49,8 @@ namespace MyTask.Migrations
                         .HasColumnType("uuid");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("UserId");
 
                     b.ToTable("Assignment");
                 });
@@ -104,13 +107,13 @@ namespace MyTask.Migrations
 
             modelBuilder.Entity("MyTask.Assignment", b =>
                 {
-                    b.HasOne("MyTask.User", "Creator")
+                    b.HasOne("MyTask.User", "User")
                         .WithMany("Assignment")
-                        .HasForeignKey("Id")
+                        .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.Navigation("Creator");
+                    b.Navigation("User");
                 });
 
             modelBuilder.Entity("MyTask.User", b =>
@@ -121,10 +124,10 @@ namespace MyTask.Migrations
                                 .HasColumnType("uuid");
 
                             b1.Property<DateTime>("CreatedAt")
-                                .HasColumnType("timestamp with time zone");
+                                .HasColumnType("timestamp without time zone");
 
                             b1.Property<DateTime>("ExpireAt")
-                                .HasColumnType("timestamp with time zone");
+                                .HasColumnType("timestamp without time zone");
 
                             b1.Property<string>("Value")
                                 .IsRequired()

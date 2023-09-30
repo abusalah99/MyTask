@@ -12,7 +12,17 @@ public class BaseUnitOfWork<TEntity> : IBaseUnitOfWork<TEntity> where TEntity : 
     public virtual async Task Create(TEntity entity) => await _repository.Add(entity);
 
     public virtual async Task Delete(Guid id) => await _repository.Remove(id);
-    public virtual async Task Delete(TEntity entity) => await _repository.Remove(entity);
 
     public virtual async Task Update(TEntity entity) => await _repository.Update(entity);
+
+    protected Guid GetUserIdFromClaims(HttpContext? context)
+    {
+
+        if (context == null)
+            throw new InvalidOperationException("This operation requires an active HTTP context.");
+
+        var claimsId = context.User.FindFirst("Id") ?? new("Id", Guid.Empty.ToString());
+
+        return new(claimsId.Value);
+    }
 }

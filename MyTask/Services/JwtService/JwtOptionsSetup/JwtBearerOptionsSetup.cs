@@ -1,4 +1,6 @@
-﻿namespace MyTask;
+﻿using System;
+
+namespace MyTask;
 
 public class JwtBearerOptionsSetup : IPostConfigureOptions<JwtBearerOptions>
 {
@@ -32,7 +34,8 @@ public class JwtBearerOptionsSetup : IPostConfigureOptions<JwtBearerOptions>
                 ctx.Response.OnStarting(async () =>
                 {
                     ctx.Response.ContentType = "application/json";
-                    await ctx.Response.WriteAsync("You are not authorized");
+                    string error = JsonSerializer.Serialize(new { ErrorMessage = "You are not authorized" });
+                    await ctx.Response.WriteAsync(error);
                 });
                 return Task.CompletedTask;
             }

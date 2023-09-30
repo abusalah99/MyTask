@@ -1,20 +1,12 @@
 ﻿namespace MyTask;
 
-public class FileSaver : IFileSaver
+public class FileService : IFileService
 {
     public async Task DeleteFileIfExists(string filePath)
     {
         if (File.Exists(filePath))
-        {
-            try
-            {
-                await Task.Run(() => File.Delete(filePath));
-            }
-            catch(Exception ex) 
-            {
-                throw new ArgumentException(ex.Message);
-            }
-        }
+            await Task.Run(() => File.Delete(filePath));
+        
     }
 
     public async Task Save(IFormFile file, string filePath)
@@ -24,5 +16,6 @@ public class FileSaver : IFileSaver
         await file.CopyToAsync(fileStream);
         fileStream.Close();
     }
+    public async Task<byte[]> Get(string filePath) => await File.ReadAllBytesAsync(filePath);   
 
 }

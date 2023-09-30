@@ -1,25 +1,18 @@
-﻿using Microsoft.Extensions.Hosting;
-
-namespace MyTask.Controllers;
+﻿namespace MyTask.Controllers;
 
 [Route("api/[controller]")]
 [ApiController]
 
-public class RegisterController : BaseController<User>
+public class RegisterController : BaseControllerSetting<User>
 {
     private readonly IAuthUnitOfWork _unitOfWork;
-    private readonly IHostEnvironment _hostEnvironment;
-    public RegisterController(IAuthUnitOfWork unitOfWork, IHostEnvironment hostEnvironment) : base(unitOfWork)
-    {
-        _unitOfWork = unitOfWork;
-        _hostEnvironment = hostEnvironment;
-    }
+    public RegisterController(IAuthUnitOfWork unitOfWork) : base(unitOfWork) => _unitOfWork = unitOfWork;
 
-   
     [HttpPost]
-    public async Task<IActionResult> Post(UserRequest user) 
+    public async Task<IActionResult> Post([FromForm] UserRequest user)
     {
-        Token token = await _unitOfWork.Register(user, _hostEnvironment.ContentRootPath);
+
+        Token token = await _unitOfWork.Register(user);
 
         SetCookie("AccessToken",
         token.AccessToken,
@@ -28,7 +21,6 @@ public class RegisterController : BaseController<User>
             token.RefreshToken,
             token.RefreshTokenExpiresAtExpires);
 
-        return Ok(token);
+        return Ok(new { Response = token });
     }
-
 }

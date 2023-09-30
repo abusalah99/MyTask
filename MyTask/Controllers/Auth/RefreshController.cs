@@ -2,20 +2,21 @@
 
 [Route("api/[controller]")]
 [ApiController]
-public class RefreshController : BaseController<User>
+public class RefreshController : BaseControllerSetting<User>
 {
     private readonly IAuthUnitOfWork _unitOfWork;
 
     public RefreshController(IAuthUnitOfWork unitOfWork) : base(unitOfWork)
         => _unitOfWork = unitOfWork;
-    
+
     [HttpPost]
-    public async Task<IActionResult> Refresh(Token? refreshToken)
+    public async Task<IActionResult> Refresh(RefreshTokenValue? requestToken)
     {
+
         string oldToken = Request.Cookies["RefreshToken"] ?? string.Empty;
 
-        if (refreshToken != null && refreshToken.RefreshToken != null)
-            oldToken = refreshToken.RefreshToken;
+        if (requestToken != null)
+            oldToken = requestToken.RefreshToken;
 
         Token token = await _unitOfWork.Refresh(oldToken);
 
@@ -26,7 +27,6 @@ public class RefreshController : BaseController<User>
             token.RefreshToken,
             token.RefreshTokenExpiresAtExpires);
 
-        return Ok(token);
+        return Ok(new { Response = token });
     }
-
 }

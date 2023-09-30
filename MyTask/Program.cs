@@ -1,5 +1,6 @@
 using MyTask;
 
+
 var builder = WebApplication.CreateBuilder(args);
 
 
@@ -11,7 +12,11 @@ builder.Services.AddDbContext<ApplicationDbContext>(
                       .EnableSensitiveDataLogging()
                       .UseQueryTrackingBehavior(QueryTrackingBehavior.NoTracking));
 
+AppContext.SetSwitch("Npgsql.EnableLegacyTimestampBehavior", true);
+
 builder.Services.AddDependencyInjectionService();
+
+builder.Services.AddHttpContextAccessor();
 
 builder.Services.AddOptionService();
 
@@ -21,6 +26,8 @@ var app = builder.Build();
 
 
 app.UseMiddleware<TransactionMiddleware>();
+
+
 
 app.UseMiddleware<GlobalErrorHandlerMiddleware>();
 

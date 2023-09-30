@@ -10,5 +10,6 @@ public class UserAssignmentConfiguration : IEntityTypeConfiguration<UserAssignme
 
         builder.Property(e => e.AssignmentId).IsRequired();
 
+        builder.Property(e => e.Status).HasDefaultValue("Unfinished");
     }
 }

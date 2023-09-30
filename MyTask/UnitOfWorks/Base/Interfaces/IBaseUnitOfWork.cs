@@ -10,5 +10,4 @@ public interface IBaseUnitOfWork<TEntity> where TEntity : BaseEntity
     Task Update(TEntity entity);
 
     Task Delete(Guid id);
-    Task Delete(TEntity entity);
 }

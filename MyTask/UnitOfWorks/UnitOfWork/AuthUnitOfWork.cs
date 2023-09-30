@@ -1,6 +1,4 @@
-﻿using System.Data.SqlTypes;
-
-namespace MyTask;
+﻿namespace MyTask;
 
 public class AuthUnitOfWork : BaseUnitOfWorkSetting<User>, IAuthUnitOfWork
 {
@@ -10,10 +8,11 @@ public class AuthUnitOfWork : BaseUnitOfWorkSetting<User>, IAuthUnitOfWork
     private readonly JwtRefreshOptions _jwtRefreshOptions;
     private readonly JwtAccessOptions _jwtAccessOptions;
     private readonly IUserUnitOfWork _userUnitOfWork;
+    private readonly IHttpContextAccessor _httpContext;
 
     public AuthUnitOfWork(IUserRepository repository, IJwtProvider jwtProvider
         , RefreshTokenValidator refreshTokenValidator,IOptions<JwtRefreshOptions> jwtRefreshOptions,
-        IOptions<JwtAccessOptions> jwtAccessOptions, IUserUnitOfWork userUnitOfWork) : base(repository)
+        IOptions<JwtAccessOptions> jwtAccessOptions, IUserUnitOfWork userUnitOfWork, IHttpContextAccessor httpContext) : base(repository)
     {
         _repository = repository;
         _jwtProvider = jwtProvider;
@@ -21,18 +20,23 @@ public class AuthUnitOfWork : BaseUnitOfWorkSetting<User>, IAuthUnitOfWork
         _jwtRefreshOptions = jwtRefreshOptions.Value;
         _jwtAccessOptions = jwtAccessOptions.Value;
         _userUnitOfWork = userUnitOfWork;
+        _httpContext = httpContext;
     }
-    public async Task<Token> Register(UserRequest userRequest , string rootPath)
+
+    public async Task<Token> Register(UserRequest userRequest)
     {
-        User user = await _userUnitOfWork.MapFromUserRequestToUser(userRequest , rootPath);
+        User user = await _userUnitOfWork.MapFromUserRequestToUser(userRequest);
+
         user.RefreshToken = CreateNewRefreshToken();
 
-        await this.Create(user);
+        user.Password = BCrypt.Net.BCrypt.HashPassword(user.Password);
+
+        await _userUnitOfWork.Create(user);
 
         Token token = new()
         {
             AccessToken = _jwtProvider.GenrateAccessToken(user),
-            AccessTokenExpiresAt = DateTime.UtcNow.AddMinutes(_jwtAccessOptions.ExpireTimeInMintes),
+            AccessTokenExpiresAt = DateTime.Now.AddMinutes(_jwtAccessOptions.ExpireTimeInMintes),
             RefreshToken = user.RefreshToken.Value,
             RefreshTokenExpiresAtExpires = user.RefreshToken.ExpireAt,
             Role = user.Role
@@ -46,16 +50,10 @@ public class AuthUnitOfWork : BaseUnitOfWorkSetting<User>, IAuthUnitOfWork
         User userFromDb = await _repository.GetByMail(request.Email);
 
 
-        if (!BCrypt.Net.BCrypt.Verify(request.password, userFromDb.Password))
+        if (PasswordNotEqual(request.password, userFromDb.Password))
             throw new ArgumentException("wrong password");
 
-        if (userFromDb.RefreshToken == null)
-        {
-            userFromDb.RefreshToken = CreateNewRefreshToken();
-            await Update(userFromDb);
-        }
-
-        if (!_refreshTokenValidator.Validate(userFromDb.RefreshToken.Value))
+        if (TokenNotExist(userFromDb.RefreshToken) || TokenNotValid(userFromDb.RefreshToken))
         {
             userFromDb.RefreshToken = CreateNewRefreshToken();
             await Update(userFromDb);
@@ -77,7 +75,8 @@ public class AuthUnitOfWork : BaseUnitOfWorkSetting<User>, IAuthUnitOfWork
     {
         User userFromDb = await _repository.GetByToken(refreshToken);
 
-        userFromDb.RefreshToken = null;
+        userFromDb.RefreshToken = new();
+
         await Update(userFromDb);
     }
 
@@ -88,8 +87,8 @@ public class AuthUnitOfWork : BaseUnitOfWorkSetting<User>, IAuthUnitOfWork
         Token token = new()
         {
             AccessToken = _jwtProvider.GenrateAccessToken(userFromDb),
-            AccessTokenExpiresAt = DateTime.UtcNow.AddMinutes(_jwtAccessOptions.ExpireTimeInMintes),
-            RefreshToken = refreshToken,
+            AccessTokenExpiresAt = DateTime.Now.AddMinutes(_jwtAccessOptions.ExpireTimeInMintes),
+            RefreshToken = userFromDb.RefreshToken.Value,
             RefreshTokenExpiresAtExpires = userFromDb.RefreshToken.ExpireAt,
             Role = userFromDb.Role
         };
@@ -97,11 +96,15 @@ public class AuthUnitOfWork : BaseUnitOfWorkSetting<User>, IAuthUnitOfWork
         return token;
     }
 
-    public async Task<Token> UpdatePassword(PasswordRequest password, Guid id)
+    public async Task<Token> UpdatePassword(PasswordRequest password)
     {
+        var context = _httpContext?.HttpContext;
+
+        Guid id = GetUserIdFromClaims(context);
+
         User userFromDb = await _repository.Get(id);
 
-        if (!BCrypt.Net.BCrypt.Verify(password.Password, userFromDb.Password))
+        if (PasswordNotEqual(password.NewPassword , userFromDb.Password))
             throw new ArgumentException("wrong password");
 
         userFromDb.Password = BCrypt.Net.BCrypt.HashPassword(password.NewPassword);
@@ -113,7 +116,7 @@ public class AuthUnitOfWork : BaseUnitOfWorkSetting<User>, IAuthUnitOfWork
         Token newToken = new()
         {
             AccessToken = _jwtProvider.GenrateAccessToken(userFromDb),
-            AccessTokenExpiresAt = DateTime.UtcNow.AddMinutes(_jwtAccessOptions.ExpireTimeInMintes),
+            AccessTokenExpiresAt = DateTime.Now.AddMinutes(_jwtAccessOptions.ExpireTimeInMintes),
             RefreshToken = userFromDb.RefreshToken.Value,
             RefreshTokenExpiresAtExpires = userFromDb.RefreshToken.ExpireAt,
             Role = userFromDb.Role
@@ -135,4 +138,9 @@ public class AuthUnitOfWork : BaseUnitOfWorkSetting<User>, IAuthUnitOfWork
 
         return newRefreshToken;
     }
+    private bool TokenNotValid(RefreshToken token) => !_refreshTokenValidator.Validate(token.Value);
+
+    private bool TokenNotExist(RefreshToken token) => token.Value.IsNullOrEmpty();
+    private bool PasswordNotEqual(string password, string rightPassword)
+        => !BCrypt.Net.BCrypt.Verify(password, rightPassword);
 }

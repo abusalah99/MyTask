@@ -7,7 +7,5 @@ public record UserRequest
     public string Email { get; set; } = null!;
     public string Password { get; set; } = null!;
     public string Phone { get; set; } = null!;
-    public string Role { get; set; } = null!;
-    public RefreshToken? RefreshToken { get; set; }
-    public IFormFile? UserImage { get; set; }
+    public IFormFile? ProfileImage { get; set; }
 }

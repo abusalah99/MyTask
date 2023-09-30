@@ -8,5 +8,3 @@ public record Token
     public DateTime RefreshTokenExpiresAtExpires { get; set; }
     public string Role { get; set; } = null!;
 }
-
-

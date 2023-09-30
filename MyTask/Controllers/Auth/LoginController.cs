@@ -2,7 +2,7 @@
 
 [Route("api/[controller]")]
 [ApiController]
-public class LoginController : BaseController<User>
+public class LoginController : BaseControllerSetting<User>
 {
     private readonly IAuthUnitOfWork _unitOfWork;
     public LoginController(IAuthUnitOfWork authUnitOfWork) : base(authUnitOfWork)
@@ -21,6 +21,6 @@ public class LoginController : BaseController<User>
             token.RefreshToken,
             token.RefreshTokenExpiresAtExpires);
 
-        return Ok(token);
+        return Ok(new {Response = token });
     }
 }

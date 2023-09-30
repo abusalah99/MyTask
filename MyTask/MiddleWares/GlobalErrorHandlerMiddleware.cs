@@ -1,4 +1,6 @@
-﻿namespace MyTask;
+﻿using System;
+
+namespace MyTask;
 
 public class GlobalErrorHandlerMiddleware : IMiddleware
 {
@@ -20,7 +22,8 @@ public class GlobalErrorHandlerMiddleware : IMiddleware
 
             context.Response.ContentType = "application/json";
             context.Response.StatusCode = 500;
-            await context.Response.WriteAsync(exception.Message);
+            string error = JsonSerializer.Serialize(new { ErrorMessage = exception.Message });
+            await context.Response.WriteAsync(error);
         }
     }
 }

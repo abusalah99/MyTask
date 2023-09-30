@@ -2,7 +2,7 @@
 
 public record RefreshToken 
 {
-    public required string Value { get; set; }
-    public required DateTime CreatedAt { get; set; }
-    public required DateTime ExpireAt { get; set; }
+    public  string Value { get; set; } = string.Empty;
+    public  DateTime CreatedAt { get; set; } = DateTime.MinValue;
+    public DateTime ExpireAt { get; set; } = DateTime.MinValue;
 }

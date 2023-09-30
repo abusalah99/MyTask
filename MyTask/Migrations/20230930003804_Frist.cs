@@ -22,8 +22,8 @@ namespace MyTask.Migrations
                     ProfilePhotoUrl = table.Column<string>(type: "text", nullable: true),
                     Role = table.Column<string>(type: "text", nullable: false),
                     RefreshToken_Value = table.Column<string>(type: "character varying(128)", maxLength: 128, nullable: false),
-                    RefreshToken_CreatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
-                    RefreshToken_ExpireAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
+                    RefreshToken_CreatedAt = table.Column<DateTime>(type: "timestamp without time zone", nullable: false),
+                    RefreshToken_ExpireAt = table.Column<DateTime>(type: "timestamp without time zone", nullable: false),
                     Name = table.Column<string>(type: "text", nullable: false)
                 },
                 constraints: table =>
@@ -37,8 +37,8 @@ namespace MyTask.Migrations
                 {
                     Id = table.Column<Guid>(type: "uuid", nullable: false),
                     Description = table.Column<string>(type: "text", nullable: false),
-                    CreatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
-                    DueTo = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
+                    CreatedAt = table.Column<DateTime>(type: "timestamp without time zone", nullable: false),
+                    DueTo = table.Column<DateTime>(type: "timestamp without time zone", nullable: false),
                     UserId = table.Column<Guid>(type: "uuid", nullable: false),
                     Name = table.Column<string>(type: "text", nullable: false)
                 },
@@ -46,8 +46,8 @@ namespace MyTask.Migrations
                 {
                     table.PrimaryKey("PK_Assignment", x => x.Id);
                     table.ForeignKey(
-                        name: "FK_Assignment_User_Id",
-                        column: x => x.Id,
+                        name: "FK_Assignment_User_UserId",
+                        column: x => x.UserId,
                         principalTable: "User",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
@@ -76,6 +76,11 @@ namespace MyTask.Migrations
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
                 });
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Assignment_UserId",
+                table: "Assignment",
+                column: "UserId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_UserAssignment_AssignmentId",

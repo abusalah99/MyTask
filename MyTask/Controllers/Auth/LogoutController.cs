@@ -2,7 +2,7 @@
 
 [Route("api/[controller]")]
 [ApiController]
-public class LogoutController : BaseController<User>
+public class LogoutController : BaseControllerSetting<User>
 {
     private readonly IAuthUnitOfWork _unitOfWork;
 
@@ -10,13 +10,13 @@ public class LogoutController : BaseController<User>
             => _unitOfWork = unitOfWork;
 
     [HttpPost]
-    public async Task<IActionResult> Logout(Token? refreshToken)
+    public async Task<IActionResult> Logout(RefreshTokenValue? requestToken)
     {
 
         string oldToken = Request.Cookies["RefreshToken"] ?? string.Empty;
 
-        if (refreshToken != null && refreshToken.RefreshToken != null)
-            oldToken = refreshToken.RefreshToken;
+        if (requestToken != null)
+            oldToken = requestToken.RefreshToken;
 
         await _unitOfWork.Logout(oldToken);
 
@@ -30,6 +30,6 @@ public class LogoutController : BaseController<User>
         Response.Cookies.Delete("AccessToken", cookieOptions);
         Response.Cookies.Delete("RefreshToken", cookieOptions);
      
-        return Ok("Logout Sccess");
+        return Ok(new { Reponse = "Logout Sccess" });
     }
 }
